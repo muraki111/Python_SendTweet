@@ -1,17 +1,8 @@
-from cgitb import text
 import datetime
-import random
 import re
-from sys import stdout
 import time
-from collections import Counter, defaultdict
-from time import sleep
 
-import demoji
-import json
 import tweepy
-from janome.tokenizer import Tokenizer
-from nltk import ngrams
 
 import line_notify
 
@@ -45,7 +36,8 @@ def serch_word(api):
 
 
 if __name__ == '__main__':
-    id_old, id_new = 0
+    id_new = 0
+    id_old = 0
 
     while True:
         try:
@@ -56,6 +48,8 @@ if __name__ == '__main__':
             notification_message, imgURL, id_new = serch_word(api)
             if id_old != id_new:
                 line_notify.send_line_notify(notification_message, imgURL)
+            else:
+                time.sleep(600)
 
         except:
             pass
