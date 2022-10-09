@@ -15,4 +15,4 @@ RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
 
 COPY ./opt/requirements.txt /root/
-RUN python -m pip install -r ./opt/requirements.txt
+RUN python -m pip install -r ./root/requirements.txt
