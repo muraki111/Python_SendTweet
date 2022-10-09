@@ -1,0 +1,4 @@
+demoji
+Janome
+nltk
+tweepy
