@@ -21,7 +21,7 @@ def twitter_api():
 
 
 # Tweet検索
-def serch_word(api):
+def serch_word(api, id):
     text = None
     imgURL = []
     videoURL = []
@@ -41,6 +41,7 @@ def serch_word(api):
                     imgURL.append(result.extended_entities['media'][i]['media_url_https'])
             except:
                 pass
+            id = result.id
     # .extended_entities["media"][0]["media_url_https"]
     # print(str(results).replace(",", "\n"))
     return text, imgURL, videoURL, id, videoFlag
@@ -49,21 +50,21 @@ def serch_word(api):
 if __name__ == '__main__':
     id_new = 0
     id_old = 0
-
-    dt_now = datetime.datetime.now()
-    try:
-        # Twitter API設定
-        api = twitter_api()
-        id_old = id_new
-        notification_message, imgURL, videoURL, id_new, videoFlag = serch_word(api)
-        if id_old != id_new:
-            line_notify.send_line_text(notification_message)
-            if videoFlag:
-                line_notify.send_line_video(imgURL[0], videoURL[0])
+    while True:
+        dt_now = datetime.datetime.now()
+        try:
+            # Twitter API設定
+            api = twitter_api()
+            id_old = id_new
+            notification_message, imgURL, videoURL, id_new, videoFlag = serch_word(api, id_new)
+            if id_old != id_new:
+                line_notify.send_line_text(notification_message)
+                if videoFlag:
+                    line_notify.send_line_video(imgURL[0], videoURL[0])
+                else:
+                    for i in range(len(imgURL)):
+                        line_notify.send_line_img(imgURL[i])
             else:
-                for i in range(len(imgURL)):
-                    line_notify.send_line_img(imgURL[i])
-        else:
-            time.sleep(600)
-    except:
-        pass
+                time.sleep(6)
+        except:
+            pass
