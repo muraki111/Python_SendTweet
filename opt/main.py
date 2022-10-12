@@ -22,34 +22,46 @@ def twitter_api():
 
 # Tweet検索
 def serch_word(api):
-    # list = ""
-    list = []
+    imgURL = []
+    videoURL = []
+    videoFlag = 0
 
-    results = api.user_timeline(screen_name="salmon_shift", count=1)
+    results = api.user_timeline(screen_name="AGE_Tsumugi", count=1, tweet_mode='extended')
     for result in results:
-        text = re.sub(r"https://t.co/[0-9a-zA-Z_]{1,15}", "", result.text)
-        id = result.id
-
-        imgURL = result.extended_entities['media'][0]['media_url_https']
+        text = re.sub(r"https://t.co/[0-9a-zA-Z_]{1,15}", "", result.full_text)
+        try:
+            videoURL.append(result.extended_entities['media'][0]['video_info']['variants'][0]['url'])
+            videoFlag = 1
+        except:
+            pass
+        try:
+            for i in range(4):
+                imgURL.append(result.extended_entities['media'][i]['media_url_https'])
+        except:
+            pass
+    # .extended_entities["media"][0]["media_url_https"]
     # print(str(results).replace(",", "\n"))
-    return text, imgURL, id
+    return text, imgURL, videoURL, id, videoFlag
 
 
 if __name__ == '__main__':
     id_new = 0
     id_old = 0
 
-    while True:
-        try:
-            dt_now = datetime.datetime.now()
-            # Twitter API設定
-            api = twitter_api()
-            id_old = id_new
-            notification_message, imgURL, id_new = serch_word(api)
-            if id_old != id_new:
-                line_notify.send_line_notify(notification_message, imgURL)
+    dt_now = datetime.datetime.now()
+    try:
+        # Twitter API設定
+        api = twitter_api()
+        id_old = id_new
+        notification_message, imgURL, videoURL, id_new, videoFlag = serch_word(api)
+        if id_old != id_new:
+            line_notify.send_line_text(notification_message)
+            if videoFlag:
+                line_notify.send_line_video(imgURL[0], videoURL[0])
             else:
-                time.sleep(600)
-
-        except:
-            pass
+                for i in range(len(imgURL)):
+                    line_notify.send_line_img(imgURL[i])
+        else:
+            time.sleep(600)
+    except:
+        pass
