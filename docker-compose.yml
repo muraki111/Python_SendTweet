@@ -3,9 +3,10 @@ services:
   python3:
     restart: always
     build: .
-    container_name: 'python3'
+    container_name: 'python3-xxxx'
     working_dir: '/root/'
     tty: true
     volumes:
       - ./opt:/root/opt
+      - ./settings.toml:/root/settings.toml
     command: python opt/main.py

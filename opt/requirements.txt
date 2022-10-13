@@ -1,4 +1,3 @@
-demoji
-Janome
-nltk
-tweepy
+joblib==1.2.0
+toml==0.10.2
+tweepy==4.10.1

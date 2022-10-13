@@ -1,0 +1,12 @@
+[LINE]
+apiURL = ''
+channel_access_token = ''
+
+[Twitter]
+CONSUMER_KEY = ''
+CONSUMER_SECRET = ''
+
+ACCESS_TOKEN = ''
+ACCESS_SECRET = ''
+
+UserID = ['abcid', 'defid', 'ghgid']

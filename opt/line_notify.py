@@ -2,68 +2,56 @@ import json
 import urllib.error
 import urllib.request
 
-# https://qiita.com/hiiii/items/caab4e41fc83b5b5c209
+import toml
+
+# 固定 mediaURL[0]: type
+# 可変 mediaURL[1]: img
+# 可変 mediaURL[2]: img or video
+# 可変 mediaURL[3]: img
+# 可変 mediaURL[4]: img
+# 固定 mediaURL[6]: UserID
+# 固定 mediaURL[7]: UserName
+# 固定 mediaURL[8]: ProfileImgURL
 
 
-def send_line_text(notification_message):
-    json_open = open('key.json', 'r')
-    json_load = json.load(json_open)
+def create_data(message, mediaURL):
+    toml_open = open('settings.toml', 'r')
+    toml_load = toml.load(toml_open)
 
-    url = 'https://api.line.me/v2/bot/message/broadcast'
-    channel_access_token = json_load['channel_access_token']
-    data = {
-        'messages': [{
-            'type': 'text',
-            'text': notification_message
-        }]
-    }
+    data = {"messages": [{"type": "text", "text": message}]}
+    data = json.dumps(data)[:-3]
+
+    if toml_load['Twitter']['UserID'][0] != mediaURL[len(mediaURL)-3]:
+        data += ',"sender": {"name": "' + mediaURL[len(mediaURL)-2] + '","iconUrl": "' + mediaURL[len(mediaURL)-1] + '"}'
+
+    if mediaURL[0] == 'photo':
+        for i in range(len(mediaURL)-4):
+            data += '},{"type": "image","originalContentUrl": "' + mediaURL[i+1] + '","previewImageUrl": "' + mediaURL[i+1] + '"'
+            if toml_load['Twitter']['UserID'][0] != mediaURL[len(mediaURL)-3]:
+                data += ',"sender": {"name": "' + mediaURL[len(mediaURL)-2] + '","iconUrl": "' + mediaURL[len(mediaURL)-1] + '"}'
+
+    elif mediaURL[0] == 'video':
+        data += '},{"type": "video","originalContentUrl": "' + mediaURL[2] + '","previewImageUrl": "' + mediaURL[1] + '","trackingId": "track-id"'
+
+        if toml_load['Twitter']['UserID'][0] != mediaURL[len(mediaURL)-3]:
+            data += ',"sender": {"name": "' + mediaURL[len(mediaURL)-2] + '","iconUrl": "' + mediaURL[len(mediaURL)-1] + '"}'
+
+    data += '}]}'
+    data = json.loads(data, strict=False)
+
+    return data
+
+
+def send_data(message, mediaURL):
+    toml_open = open('settings.toml', 'r')
+    toml_load = toml.load(toml_open)
+
+    apiURL = toml_load['LINE']['apiURL']
+    channel_access_token = toml_load['LINE']['channel_access_token']
+    data = create_data(message, mediaURL)
+
     jsonstr = json.dumps(data).encode('ascii')
-    request = urllib.request.Request(url, data=jsonstr)
-    request.add_header('Content-Type', 'application/json')
-    request.add_header('Authorization', 'Bearer ' + channel_access_token)
-    request.get_method = lambda: 'POST'
-    response = urllib.request.urlopen(request)
-
-
-def send_line_img(imgURL):
-    json_open = open('key.json', 'r')
-    json_load = json.load(json_open)
-
-    url = 'https://api.line.me/v2/bot/message/broadcast'
-    channel_access_token = json_load['channel_access_token']
-    print(imgURL)
-    data = {
-        'messages': [{
-            "type": "image",
-            "originalContentUrl": imgURL,
-            "previewImageUrl": imgURL
-        }]
-    }
-    jsonstr = json.dumps(data).encode('ascii')
-    request = urllib.request.Request(url, data=jsonstr)
-    request.add_header('Content-Type', 'application/json')
-    request.add_header('Authorization', 'Bearer ' + channel_access_token)
-    request.get_method = lambda: 'POST'
-    response = urllib.request.urlopen(request)
-
-
-def send_line_video(imgURL, videoURL):
-    json_open = open('key.json', 'r')
-    json_load = json.load(json_open)
-
-    url = 'https://api.line.me/v2/bot/message/broadcast'
-    channel_access_token = json_load['channel_access_token']
-    print(imgURL)
-    data = {
-        'messages': [{
-            "type": "video",
-            "originalContentUrl": videoURL,
-            "previewImageUrl": imgURL,
-            "trackingId": "track-id"
-        }]
-    }
-    jsonstr = json.dumps(data).encode('ascii')
-    request = urllib.request.Request(url, data=jsonstr)
+    request = urllib.request.Request(apiURL, data=jsonstr)
     request.add_header('Content-Type', 'application/json')
     request.add_header('Authorization', 'Bearer ' + channel_access_token)
     request.get_method = lambda: 'POST'
