@@ -105,12 +105,11 @@ if __name__ == '__main__':
         TweetID, message, mediaURL = serch_word(api, UserID)
 
         # # 最後に送信したTweetIDが古かった場合
-        # if TweetID != TweetID_old:
-        if True:
+        if TweetID != TweetID_old:
             # LINEで送信
             line_notify.send_data(message, mediaURL)
 
             # TweetIDの更新
             joblib.dump(TweetID, './opt/TweetID/TweetID_'+toml_load['Twitter']['UserID'][i], compress=3)
         else:
-            time.sleep(6)
+            time.sleep(60)

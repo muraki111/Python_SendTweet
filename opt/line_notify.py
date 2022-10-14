@@ -19,25 +19,25 @@ def create_data(message, mediaURL):
     toml_load = toml.load(toml_open)
 
     data = {"messages": [{"type": "text", "text": message}]}
-    data = json.dumps(data)[:-3]
+    icon = {"sender": {"name": mediaURL[len(mediaURL)-2], "iconUrl": mediaURL[len(mediaURL)-1]}}
 
     if toml_load['Twitter']['UserID'][0] != mediaURL[len(mediaURL)-3]:
-        data += ',"sender": {"name": "' + mediaURL[len(mediaURL)-2] + '","iconUrl": "' + mediaURL[len(mediaURL)-1] + '"}'
+        data["messages"][0].update(icon)
 
     if mediaURL[0] == 'photo':
         for i in range(len(mediaURL)-4):
-            data += '},{"type": "image","originalContentUrl": "' + mediaURL[i+1] + '","previewImageUrl": "' + mediaURL[i+1] + '"'
+            data_photo = {"type": "image", "originalContentUrl": mediaURL[i+1], "previewImageUrl": mediaURL[i+1]}
+            data["messages"].append(data_photo)
+
             if toml_load['Twitter']['UserID'][0] != mediaURL[len(mediaURL)-3]:
-                data += ',"sender": {"name": "' + mediaURL[len(mediaURL)-2] + '","iconUrl": "' + mediaURL[len(mediaURL)-1] + '"}'
+                data["messages"][i+1].update(icon)
 
     elif mediaURL[0] == 'video':
-        data += '},{"type": "video","originalContentUrl": "' + mediaURL[2] + '","previewImageUrl": "' + mediaURL[1] + '","trackingId": "track-id"'
+        data_video = {"type": "video", "originalContentUrl": mediaURL[2], "previewImageUrl": mediaURL[1], "trackingId": "track-id"}
+        data["messages"].append(data_video)
 
         if toml_load['Twitter']['UserID'][0] != mediaURL[len(mediaURL)-3]:
-            data += ',"sender": {"name": "' + mediaURL[len(mediaURL)-2] + '","iconUrl": "' + mediaURL[len(mediaURL)-1] + '"}'
-
-    data += '}]}'
-    data = json.loads(data, strict=False)
+            data["messages"][1].update(icon)
 
     return data
 
