@@ -43,16 +43,17 @@ def create_data(message, mediaURL):
 
 
 def send_data(message, mediaURL):
-    toml_open = open('settings.toml', 'r')
-    toml_load = toml.load(toml_open)
+    if(mediaURL != []):
+        data = create_data(message, mediaURL)
 
-    apiURL = toml_load['LINE']['apiURL']
-    channel_access_token = toml_load['LINE']['channel_access_token']
-    data = create_data(message, mediaURL)
+        toml_open = open('settings.toml', 'r')
+        toml_load = toml.load(toml_open)
+        apiURL = toml_load['LINE']['apiURL']
+        channel_access_token = toml_load['LINE']['channel_access_token']
 
-    jsonstr = json.dumps(data).encode('ascii')
-    request = urllib.request.Request(apiURL, data=jsonstr)
-    request.add_header('Content-Type', 'application/json')
-    request.add_header('Authorization', 'Bearer ' + channel_access_token)
-    request.get_method = lambda: 'POST'
-    response = urllib.request.urlopen(request)
+        jsonstr = json.dumps(data).encode('ascii')
+        request = urllib.request.Request(apiURL, data=jsonstr)
+        request.add_header('Content-Type', 'application/json')
+        request.add_header('Authorization', 'Bearer ' + channel_access_token)
+        request.get_method = lambda: 'POST'
+        response = urllib.request.urlopen(request)
