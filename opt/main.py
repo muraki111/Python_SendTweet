@@ -111,5 +111,4 @@ if __name__ == '__main__':
 
             # TweetIDの更新
             joblib.dump(TweetID, './opt/TweetID/TweetID_'+toml_load['Twitter']['UserID'][i], compress=3)
-        else:
-            time.sleep(60)
+    time.sleep(60)
