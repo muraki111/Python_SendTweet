@@ -1,4 +1,4 @@
-# LINE Bot QR code
+# LINE Bot
 
 ## 変更箇所
 ### docker-compose
