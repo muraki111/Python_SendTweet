@@ -31,7 +31,7 @@ def serch_word(api, UserID):
     mediaURL = []
     result = api.user_timeline(screen_name=UserID, count=1, tweet_mode='extended')[0]
 
-    if str(result.full_text[:2]) != 'RT' and str(result.full_text[:2]) != '@':
+    if str(result.full_text[:2]) != 'RT' and str(result.full_text[:1]) != '@':
         # Tweet文章
         message = result.full_text
 
