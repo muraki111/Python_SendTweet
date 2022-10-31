@@ -9,7 +9,7 @@ container_name: 'python3-xxxx'
 ### settings.toml
 ```toml
 [LINE]
-apiURL = ''
+apiURL = 'https://api.line.me/v2/bot/message/broadcast'
 channel_access_token = ''
 
 [Twitter]
