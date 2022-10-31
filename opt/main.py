@@ -29,46 +29,47 @@ def twitter_api():
 # Tweet検索
 def serch_word(api, UserID):
     mediaURL = []
-    result = api.user_timeline(screen_name=UserID, count=1, tweet_mode='extended')[0]
+    results = api.user_timeline(screen_name=UserID, count=5, tweet_mode='extended')
 
-    if str(result.full_text[:2]) != 'RT' and str(result.full_text[:1]) != '@':
-        # Tweet文章
-        message = result.full_text
+    for result in results:
+        if str(result.full_text[:2]) != 'RT' and str(result.full_text[:1]) != '@':
+            # Tweet文章
+            message = result.full_text
 
-        # Tweetが text, photo, video か判別する
-        try:
-            Tweettype = result.extended_entities['media'][0]['type']
-
-            # 写真、動画のURL削除
-            message = re.sub(r' https://t.co/[0-9a-zA-Z_]{1,15}', '', result.full_text)
-        except:
-            Tweettype = 'text'
-
-        if Tweettype == 'text':
-            mediaURL.append('text')
-
-        elif Tweettype == 'photo':
-            mediaURL.append('photo')
+            # Tweetが text, photo, video か判別する
             try:
-                for i in range(4):
-                    mediaURL.append(result.extended_entities['media'][i]['media_url_https'])
+                Tweettype = result.extended_entities['media'][0]['type']
+
+                # 写真、動画のURL削除
+                message = re.sub(r' https://t.co/[0-9a-zA-Z_]{1,15}', '', result.full_text)
             except:
-                pass
+                Tweettype = 'text'
 
-        elif Tweettype == 'video':
-            mediaURL.append('video')
-            mediaURL.append(result.extended_entities['media'][0]['media_url_https'])
-            mediaURL.append(result.extended_entities['media'][0]['video_info']['variants'][0]['url'])
+            if Tweettype == 'text':
+                mediaURL.append('text')
 
-        # メッセージの末尾にTweetURLを追記
-        message += '\n\nhttps://twitter.com/'+str(UserID)+'/status/'+str(result.id)
+            elif Tweettype == 'photo':
+                mediaURL.append('photo')
+                try:
+                    for i in range(4):
+                        mediaURL.append(result.extended_entities['media'][i]['media_url_https'])
+                except:
+                    pass
 
-        # ユーザー名とプロフィール写真のURLを格納
-        mediaURL.append(result.user.screen_name)
-        mediaURL.append(result.user.name)
-        mediaURL.append(result.user.profile_image_url_https)
-    else:
-        message = None
+            elif Tweettype == 'video':
+                mediaURL.append('video')
+                mediaURL.append(result.extended_entities['media'][0]['media_url_https'])
+                mediaURL.append(result.extended_entities['media'][0]['video_info']['variants'][0]['url'])
+
+            # メッセージの末尾にTweetURLを追記
+            message += '\n\nhttps://twitter.com/'+str(UserID)+'/status/'+str(result.id)
+
+            # ユーザー名とプロフィール写真のURLを格納
+            mediaURL.append(result.user.screen_name)
+            mediaURL.append(result.user.name)
+            mediaURL.append(result.user.profile_image_url_https)
+        else:
+            message = None
 
     TweetID = result.id
 
@@ -93,22 +94,26 @@ if __name__ == '__main__':
 
     # -----------loop
 
-    for i in range(len(toml_load['Twitter']['UserID'])):
-        # UserID取得
-        UserID = toml_load['Twitter']['UserID'][i]
+    try:
+        for i in range(len(toml_load['Twitter']['UserID'])):
+            # UserID取得
+            UserID = toml_load['Twitter']['UserID'][i]
 
-        # 最後に送信したTweetID取得
-        TweetID = joblib.load('./opt/TweetID/TweetID_' + UserID)
-        TweetID_old = TweetID
+            # 最後に送信したTweetID取得
+            TweetID = joblib.load('./opt/TweetID/TweetID_' + UserID)
+            TweetID_old = TweetID
 
-        # Tweet取得
-        TweetID, message, mediaURL = serch_word(api, UserID)
+            # Tweet取得
+            TweetID, message, mediaURL = serch_word(api, UserID, TweetID)
 
-        # # 最後に送信したTweetIDが古かった場合
-        if TweetID != TweetID_old:
-            # LINEで送信
-            line_notify.send_data(message, mediaURL)
+            # # 最後に送信したTweetIDが古かった場合
+            if TweetID != TweetID_old:
+                # LINEで送信
+                line_notify.send_data(message, mediaURL)
 
-            # TweetIDの更新
-            joblib.dump(TweetID, './opt/TweetID/TweetID_'+toml_load['Twitter']['UserID'][i], compress=3)
+                # TweetIDの更新
+                joblib.dump(TweetID, './opt/TweetID/TweetID_'+toml_load['Twitter']['UserID'][i], compress=3)
+    except:
+        pass
+
     time.sleep(60)
