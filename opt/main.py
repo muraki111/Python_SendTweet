@@ -1,11 +1,13 @@
 import os
 import re
 import time
+from datetime import datetime
 from pathlib import Path
 
 import joblib
 import toml
 import tweepy
+from dateutil.relativedelta import relativedelta
 
 import line_notify
 
@@ -27,12 +29,15 @@ def twitter_api():
 
 
 # Tweet検索
-def serch_word(api, UserID):
+def serch_word(api, UserID, TweetID):
     mediaURL = []
     results = api.user_timeline(screen_name=UserID, count=5, tweet_mode='extended')
+    message = None
 
-    for result in results:
+    for result in reversed(results):
         if str(result.full_text[:2]) != 'RT' and str(result.full_text[:1]) != '@':
+            mediaURL = []
+
             # Tweet文章
             message = result.full_text
 
@@ -66,12 +71,10 @@ def serch_word(api, UserID):
 
             # ユーザー名とプロフィール写真のURLを格納
             mediaURL.append(result.user.screen_name)
-            mediaURL.append(result.user.name)
+            mediaURL.append(result.user.name[:20].split(" ")[0])
             mediaURL.append(result.user.profile_image_url_https)
-        else:
-            message = None
 
-    TweetID = result.id
+            TweetID = result.id
 
     return TweetID, message, mediaURL
 
@@ -93,27 +96,31 @@ if __name__ == '__main__':
     TweetID_fileCheck()
 
     # -----------loop
+    while (True):
+        try:
+            for i in range(len(toml_load['Twitter']['UserID'])):
+                # UserID取得
+                UserID = toml_load['Twitter']['UserID'][i]
 
-    try:
-        for i in range(len(toml_load['Twitter']['UserID'])):
-            # UserID取得
-            UserID = toml_load['Twitter']['UserID'][i]
+                # 最後に送信したTweetID取得
+                TweetID = joblib.load('./opt/TweetID/TweetID_' + UserID)
+                TweetID_old = TweetID
 
-            # 最後に送信したTweetID取得
-            TweetID = joblib.load('./opt/TweetID/TweetID_' + UserID)
-            TweetID_old = TweetID
+                # Tweet取得
+                TweetID, message, mediaURL = serch_word(api, UserID, TweetID)
 
-            # Tweet取得
-            TweetID, message, mediaURL = serch_word(api, UserID, TweetID)
+                # # 最後に送信したTweetIDが古かった場合
+                if TweetID != TweetID_old:
+                    # LINEで送信
+                    line_notify.send_data(message, mediaURL)
 
-            # # 最後に送信したTweetIDが古かった場合
-            if TweetID != TweetID_old:
-                # LINEで送信
-                line_notify.send_data(message, mediaURL)
+                    # TweetIDの更新
+                    joblib.dump(TweetID, './opt/TweetID/TweetID_'+toml_load['Twitter']['UserID'][i], compress=3)
+        except:
+            dt1 = datetime.now()
+            dt2 = dt1 + relativedelta(months=1, day=1, hour=0, minute=0, second=0, microsecond=0)
 
-                # TweetIDの更新
-                joblib.dump(TweetID, './opt/TweetID/TweetID_'+toml_load['Twitter']['UserID'][i], compress=3)
-    except:
-        pass
+            print(UserID, 'Error : ', dt1)
+            time.sleep((dt2-dt1).total_seconds())
 
-    time.sleep(60)
+        time.sleep(60)
